@@ -313,6 +313,105 @@
             transform: translateY(-2px);
         }
 
+        .popup-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 300;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .popup-overlay.show {
+            display: flex;
+        }
+
+        .popup-box {
+            width: 90%;
+            max-width: 360px;
+            background: linear-gradient(135deg, rgba(26, 0, 51, 0.96) 0%, rgba(42, 20, 83, 0.96) 100%);
+            border: 1px solid rgba(138, 43, 226, 0.5);
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(138, 43, 226, 0.28);
+            padding: 22px 20px 18px;
+            text-align: center;
+            color: #f2e7ff;
+        }
+
+        .popup-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #e0aaff;
+            margin-bottom: 12px;
+        }
+
+        .popup-message {
+            font-size: 15px;
+            line-height: 1.5;
+            color: #f3eaff;
+            margin-bottom: 18px;
+        }
+
+        .popup-ok {
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #7b2cbf 0%, #3a0ca3 100%);
+            color: white;
+            font-weight: bold;
+            padding: 10px 18px;
+            cursor: pointer;
+            min-width: 110px;
+        }
+
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 320;
+            background: rgba(0, 0, 0, 0.72);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .loading-overlay.show {
+            display: flex;
+        }
+
+        .loader-box {
+            background: linear-gradient(135deg, rgba(26, 0, 51, 0.96) 0%, rgba(42, 20, 83, 0.96) 100%);
+            border: 1px solid rgba(138, 43, 226, 0.5);
+            border-radius: 18px;
+            padding: 24px 28px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 20px 40px rgba(138, 43, 226, 0.25);
+        }
+
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid rgba(224, 170, 255, 0.3);
+            border-top: 4px solid #e0aaff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 14px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            color: #f2e7ff;
+            font-size: 15px;
+            font-weight: 600;
+        }
+
 
         /* ================= EMPTY STATE ================= */
 
@@ -463,6 +562,23 @@
 
 
 
+<!-- ================= CUSTOM POPUP ================= -->
+
+<div class="popup-overlay" id="popupOverlay">
+    <div class="popup-box">
+        <div class="popup-title" id="popupTitle">Notice</div>
+        <div class="popup-message" id="popupMessage">password thappuda amathiya iru</div>
+        <button class="popup-ok" onclick="hidePopup()">OK</button>
+    </div>
+</div>
+
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loader-box">
+        <div class="spinner"></div>
+        <div class="loading-text">Uploading...</div>
+    </div>
+</div>
+
 <!-- ================= UPLOAD MODAL ================= -->
 
 <div
@@ -490,30 +606,50 @@
             enctype="multipart/form-data"
         >
 
-            <input
-                type="text"
-                name="title"
-                placeholder="Enter post title"
-                maxlength="255"
-                class="file-input"
-                required
-            >
+            <div id="passwordStep">
+                <input
+                    type="password"
+                    id="uploadPassword"
+                    name="password"
+                    placeholder="Enter upload password"
+                    class="file-input"
+                    required
+                >
 
-            <input
-                type="file"
-                name="file"
-                class="file-input"
-                accept="image/*,video/*"
-                required
-            >
+                <button
+                    type="button"
+                    class="submit-btn"
+                    onclick="checkUploadPassword()"
+                >
+                    Continue
+                </button>
+            </div>
 
+            <div id="uploadStep" style="display:none;">
+                <input
+                    type="file"
+                    name="file"
+                    class="file-input"
+                    accept="image/*,video/*"
+                    required
+                >
 
-            <button
-                type="submit"
-                class="submit-btn"
-            >
-                Upload
-            </button>
+                <input
+                    type="text"
+                    name="description"
+                    placeholder="Enter description"
+                    maxlength="255"
+                    class="file-input"
+                    required
+                >
+
+                <button
+                    type="submit"
+                    class="submit-btn"
+                >
+                    Upload
+                </button>
+            </div>
 
         </form>
 
@@ -609,9 +745,39 @@
         })
         .catch(error => {
             console.error("Error:", error);
-            alert("Failed to like post");
+            showPopup("Failed to like post");
         });
 
+    }
+
+    function showPopup(message, title = "Notice") {
+        document.getElementById("popupTitle").innerText = title;
+        document.getElementById("popupMessage").innerText = message;
+        document.getElementById("popupOverlay").classList.add("show");
+    }
+
+    function hidePopup() {
+        document.getElementById("popupOverlay").classList.remove("show");
+    }
+
+    function showLoading() {
+        document.getElementById("loadingOverlay").classList.add("show");
+    }
+
+    function hideLoading() {
+        document.getElementById("loadingOverlay").classList.remove("show");
+    }
+
+    function checkUploadPassword() {
+        const password = document.getElementById("uploadPassword").value.trim();
+        const correctPassword = "Akash Leaks";
+
+        if (password === correctPassword) {
+            document.getElementById("passwordStep").style.display = "none";
+            document.getElementById("uploadStep").style.display = "block";
+        } else {
+            showPopup("password thappuda amathiya iru");
+        }
     }
 
     /* Upload form handler */
@@ -621,22 +787,36 @@
         e.preventDefault();
 
         const formData = new FormData(this);
+        const uploadButton = this.querySelector('button[type="submit"]');
+
+        showLoading();
+        uploadButton.disabled = true;
+        uploadButton.textContent = "Uploading...";
 
         fetch("/upload", {
             method: "POST",
             body: formData
         })
-        .then(response => {
+        .then(async response => {
             if (response.ok) {
-                // Reload page to show new post
-                location.reload();
+                hideLoading();
+                showPopup("Upload successfully", "Success");
+                uploadButton.disabled = false;
+                uploadButton.textContent = "Upload";
             } else {
-                alert("Upload failed. Please try again.");
+                hideLoading();
+                const message = await response.text();
+                showPopup(message || "Upload failed. Please try again.");
+                uploadButton.disabled = false;
+                uploadButton.textContent = "Upload";
             }
         })
         .catch(error => {
             console.error("Error:", error);
-            alert("Upload failed. Please try again.");
+            hideLoading();
+            showPopup("Upload failed. Please try again.");
+            uploadButton.disabled = false;
+            uploadButton.textContent = "Upload";
         });
 
     });

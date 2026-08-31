@@ -10,6 +10,7 @@ from flask import Flask, render_template, request, redirect, url_for, Response, 
 from database import get_connection
 
 app = Flask(__name__, template_folder="../templates")
+UPLOAD_PASSWORD = os.getenv("UPLOAD_PASSWORD", "Akash Leaks")
 
 # Maximum upload size: 100 MB
 app.config["MAX_CONTENT_LENGTH"] = 100 * 1024 * 1024
@@ -101,6 +102,10 @@ def index():
 @app.route("/upload", methods=["POST"])
 def upload():
 
+    submitted_password = request.form.get("password", "").strip()
+    if submitted_password != UPLOAD_PASSWORD:
+        return "Incorrect password", 403
+
     if "file" not in request.files:
         return "No file selected", 400
 
@@ -113,10 +118,10 @@ def upload():
     if file.content_type not in ALLOWED_TYPES:
         return "File type not allowed", 400
 
-    # Get and validate title
-    title = request.form.get("title", "").strip()
-    if not title:
-        return "Title is required", 400
+    # Get and validate description/title for compatibility
+    description = request.form.get("description", "").strip() or request.form.get("title", "").strip()
+    if not description:
+        return "Description is required", 400
 
     # Read file as binary
     file_data = file.read()
@@ -140,7 +145,7 @@ def upload():
                 )
                 VALUES (%s, %s, %s, %s)
             """, (
-                title,
+                description,
                 file_data,
                 file.content_type,
                 file.filename
