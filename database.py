@@ -1,13 +1,21 @@
-import pymysql
+import os
+
+from dotenv import load_dotenv
+import psycopg
+from psycopg.rows import dict_row
+
+
+load_dotenv()
 
 
 def get_connection():
-    return pymysql.connect(
-        host="localhost",
-        port=3306,
-        user="root",
-        password="root",
-        database="leaks_release",
-        charset="utf8mb4",
-        cursorclass=pymysql.cursors.DictCursor
+    database_url = os.getenv("DATABASE_URL")
+
+    if not database_url:
+        raise RuntimeError("Missing required DATABASE_URL environment variable")
+
+    return psycopg.connect(
+        database_url,
+        row_factory=dict_row,
+        connect_timeout=10,
     )

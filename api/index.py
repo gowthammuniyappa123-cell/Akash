@@ -1,9 +1,15 @@
+import os
+import sys
+from datetime import datetime
+
+APP_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if APP_ROOT not in sys.path:
+    sys.path.insert(0, APP_ROOT)
+
 from flask import Flask, render_template, request, redirect, url_for, Response, jsonify
 from database import get_connection
-from datetime import datetime
-import time
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder="../templates")
 
 # Maximum upload size: 100 MB
 app.config["MAX_CONTENT_LENGTH"] = 100 * 1024 * 1024
@@ -277,10 +283,3 @@ def file_too_large(error):
 # =========================================================
 # RUN APPLICATION
 # =========================================================
-
-if __name__ == "__main__":
-    app.run(
-        debug=True,
-        host="0.0.0.0",
-        port=5000
-    )
