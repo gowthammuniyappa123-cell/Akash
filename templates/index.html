@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Leaks Release</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', 'Helvetica', sans-serif;
+            background: linear-gradient(135deg, #0a0015 0%, #1a0033 50%, #000015 100%);
+            color: #ffffff;
+            min-height: 100vh;
+        }
+
+        /* ================= HEADER ================= */
+
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+
+            height: 65px;
+            background: rgba(15, 10, 35, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(138, 43, 226, 0.3);
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            padding: 0 30px;
+            box-shadow: 0 8px 32px rgba(138, 43, 226, 0.1);
+        }
+
+        .logo {
+            font-size: 25px;
+            font-weight: bold;
+            letter-spacing: -1px;
+            color: #00d4ff;
+            text-shadow: 0 0 15px rgba(0, 212, 255, 0.5);
+        }
+
+        .upload-btn {
+            background: linear-gradient(135deg, #7b2cbf 0%, #3a0ca3 100%);
+            color: white;
+
+            border: 1px solid rgba(138, 43, 226, 0.5);
+            border-radius: 8px;
+
+            padding: 10px 18px;
+
+            font-size: 14px;
+            font-weight: bold;
+
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 15px rgba(138, 43, 226, 0.2);
+        }
+
+        .upload-btn:hover {
+            background: linear-gradient(135deg, #9d4edd 0%, #5a189a 100%);
+            box-shadow: 0 0 25px rgba(138, 43, 226, 0.4);
+            transform: translateY(-2px);
+        }
+
+
+        /* ================= MAIN ================= */
+
+        .container {
+            width: 100%;
+            max-width: 650px;
+
+            margin: 30px auto;
+            padding: 0 15px;
+        }
+
+
+        /* ================= POST ================= */
+
+        .post {
+            background: linear-gradient(135deg, rgba(26, 0, 51, 0.8) 0%, rgba(42, 20, 83, 0.8) 100%);
+            backdrop-filter: blur(10px);
+
+            border: 1px solid rgba(58, 12, 163, 0.5);
+            border-radius: 16px;
+
+            margin-bottom: 25px;
+
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(138, 43, 226, 0.15);
+            transition: all 0.3s ease;
+        }
+
+        .post:hover {
+            border-color: rgba(138, 43, 226, 0.7);
+            box-shadow: 0 12px 48px rgba(138, 43, 226, 0.25);
+            transform: translateY(-4px);
+        }
+
+        /* Post header */
+
+        .post-header {
+            height: 55px;
+
+            display: flex;
+            align-items: center;
+
+            padding: 0 15px;
+            border-bottom: 1px solid rgba(138, 43, 226, 0.2);
+        }
+
+        .post-user {
+            font-weight: bold;
+            font-size: 14px;
+            color: #e0aaff;
+        }
+
+        .post-time {
+            color: #b8a9d1;
+            font-size: 12px;
+            margin-left: 8px;
+        }
+
+
+        /* Image */
+
+        .post-image {
+            width: 100%;
+            display: block;
+
+            max-height: 700px;
+            object-fit: cover;
+        }
+
+
+        /* Video */
+
+        .post-video {
+            width: 100%;
+            display: block;
+
+            max-height: 700px;
+
+            background: #1a0033;
+        }
+
+
+        /* ================= POST ACTIONS ================= */
+
+        .post-content {
+            padding: 12px 15px;
+        }
+
+        .actions {
+            display: flex;
+            align-items: center;
+
+            margin-bottom: 8px;
+        }
+
+        .like-btn {
+            border: none;
+            background: none;
+
+            font-size: 25px;
+
+            cursor: pointer;
+
+            padding: 0;
+            color: #9d4edd;
+            transition: all 0.2s ease;
+        }
+
+        .like-btn:hover {
+            color: #e0aaff;
+            text-shadow: 0 0 10px rgba(157, 78, 221, 0.5);
+        }
+
+        .like-btn.liked {
+            color: #ff006e;
+            text-shadow: 0 0 15px rgba(255, 0, 110, 0.6);
+        }
+
+        .like-count {
+            margin-left: 8px;
+
+            font-size: 14px;
+            font-weight: bold;
+            color: #b8a9d1;
+        }
+
+
+        /* ================= UPLOAD MODAL ================= */
+
+        .modal {
+            display: none;
+
+            position: fixed;
+            z-index: 200;
+
+            left: 0;
+            top: 0;
+
+            width: 100%;
+            height: 100%;
+
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-box {
+            width: 90%;
+            max-width: 450px;
+
+            background: linear-gradient(135deg, rgba(26, 0, 51, 0.95) 0%, rgba(42, 20, 83, 0.95) 100%);
+            backdrop-filter: blur(10px);
+
+            border: 1px solid rgba(138, 43, 226, 0.5);
+            border-radius: 16px;
+
+            padding: 25px;
+            box-shadow: 0 25px 50px rgba(138, 43, 226, 0.3);
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: bold;
+
+            margin-bottom: 20px;
+            color: #e0aaff;
+        }
+
+        .close-btn {
+            float: right;
+
+            border: none;
+            background: none;
+
+            font-size: 25px;
+
+            cursor: pointer;
+            color: #9d4edd;
+            transition: all 0.2s ease;
+        }
+
+        .close-btn:hover {
+            color: #e0aaff;
+            transform: rotate(90deg);
+        }
+
+        .file-input {
+            width: 100%;
+
+            border: 1px solid rgba(138, 43, 226, 0.4);
+            border-radius: 8px;
+
+            padding: 12px;
+
+            margin-bottom: 15px;
+            background: rgba(26, 0, 51, 0.6);
+            color: #ffffff;
+            transition: all 0.2s ease;
+        }
+
+        .file-input:focus {
+            outline: none;
+            border-color: rgba(138, 43, 226, 0.8);
+            box-shadow: 0 0 15px rgba(138, 43, 226, 0.3);
+            background: rgba(26, 0, 51, 0.8);
+        }
+
+        .file-input::placeholder {
+            color: #7b68a6;
+        }
+
+        .submit-btn {
+            width: 100%;
+
+            background: linear-gradient(135deg, #7b2cbf 0%, #3a0ca3 100%);
+            color: white;
+
+            border: 1px solid rgba(138, 43, 226, 0.5);
+            border-radius: 8px;
+
+            padding: 12px;
+
+            font-size: 15px;
+            font-weight: bold;
+
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 15px rgba(138, 43, 226, 0.2);
+        }
+
+        .submit-btn:hover {
+            background: linear-gradient(135deg, #9d4edd 0%, #5a189a 100%);
+            box-shadow: 0 0 25px rgba(138, 43, 226, 0.4);
+            transform: translateY(-2px);
+        }
+
+
+        /* ================= EMPTY STATE ================= */
+
+        .empty {
+            text-align: center;
+
+            padding: 70px 20px;
+
+            color: #b8a9d1;
+        }
+
+        .empty h2 {
+            color: #e0aaff;
+            margin-bottom: 10px;
+        }
+
+
+        /* ================= MOBILE ================= */
+
+        @media (max-width: 600px) {
+
+            .header {
+                padding: 0 15px;
+            }
+
+            .logo {
+                font-size: 21px;
+            }
+
+            .upload-btn {
+                padding: 9px 14px;
+                font-size: 13px;
+            }
+
+            .container {
+                margin-top: 15px;
+                padding: 0;
+            }
+
+            .post {
+                border-left: none;
+                border-right: none;
+
+                border-radius: 0;
+            }
+
+            .modal-box {
+                border-radius: 12px;
+            }
+        }
+
+    </style>
+</head>
+
+<body>
+
+
+<!-- ================= HEADER ================= -->
+
+<header class="header">
+
+    <div class="logo">
+        Akash.P Leaks
+    </div>
+
+    <button class="upload-btn" onclick="openUpload()">
+        + Upload
+    </button>
+
+</header>
+
+
+<!-- ================= MAIN FEED ================= -->
+
+<main class="container">
+
+    {% if posts %}
+
+        {% for post in posts %}
+
+        <article class="post">
+
+            <div class="post-header">
+
+                <span class="post-user">
+                    {{ post.title }}
+                </span>
+
+                <span class="post-time">
+                    {{ post.time_ago }}
+                </span>
+
+            </div>
+
+            {% if post.file_type.startswith('image') %}
+                <img
+                    src="/media/{{ post.id }}"
+                    class="post-image"
+                    alt="{{ post.file_name }}"
+                >
+            {% elif post.file_type.startswith('video') %}
+                <video
+                    class="post-video"
+                    controls
+                >
+                    <source src="/media/{{ post.id }}" type="{{ post.file_type }}">
+                    Your browser does not support video.
+                </video>
+            {% endif %}
+
+            <div class="post-content">
+
+                <div class="actions">
+
+                    <button
+                        class="like-btn"
+                        onclick="likePost(this)"
+                        data-post-id="{{ post.id }}"
+                    >
+                        ♡
+                    </button>
+
+                    <span class="like-count" data-post-id="{{ post.id }}">
+                        {{ post.likes }} like{{ 's' if post.likes != 1 else '' }}
+                    </span>
+
+                </div>
+
+            </div>
+
+        </article>
+
+        {% endfor %}
+
+    {% else %}
+
+        <div class="empty">
+
+            <h2>No posts yet</h2>
+
+            <p>Be the first person to upload something.</p>
+
+        </div>
+
+    {% endif %}
+
+</main>
+
+
+
+<!-- ================= UPLOAD MODAL ================= -->
+
+<div
+    class="modal"
+    id="uploadModal"
+>
+
+    <div class="modal-box">
+
+        <button
+            class="close-btn"
+            onclick="closeUpload()"
+        >
+            ×
+        </button>
+
+
+        <div class="modal-title">
+            Upload Image or Video
+        </div>
+
+
+        <form
+            id="uploadForm"
+            enctype="multipart/form-data"
+        >
+
+            <input
+                type="text"
+                name="title"
+                placeholder="Enter post title"
+                maxlength="255"
+                class="file-input"
+                required
+            >
+
+            <input
+                type="file"
+                name="file"
+                class="file-input"
+                accept="image/*,video/*"
+                required
+            >
+
+
+            <button
+                type="submit"
+                class="submit-btn"
+            >
+                Upload
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+
+<!-- ================= JAVASCRIPT ================= -->
+
+<script>
+
+    /* Open upload modal */
+
+    function openUpload() {
+
+        document
+            .getElementById("uploadModal")
+            .classList
+            .add("show");
+
+    }
+
+
+    /* Close upload modal */
+
+    function closeUpload() {
+
+        document
+            .getElementById("uploadModal")
+            .classList
+            .remove("show");
+
+    }
+
+
+    /* Close when clicking outside */
+
+    window.onclick = function(event) {
+
+        const modal =
+            document.getElementById("uploadModal");
+
+        if (event.target === modal) {
+
+            closeUpload();
+
+        }
+
+    }
+
+
+    /* Like */
+
+    function likePost(button) {
+
+        const postId = button.getAttribute('data-post-id');
+        const countElement =
+            document.querySelector(`[data-post-id="${postId}"].like-count`);
+
+        // Send POST request to /like/<post_id>
+        fetch(`/like/${postId}`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+
+            if (data.success) {
+
+                // Update UI with new like count
+                countElement.innerText = 
+                    data.likes + " like" + (data.likes !== 1 ? "s" : "");
+
+                // Toggle heart appearance
+                if (!button.classList.contains("liked")) {
+
+                    button.innerHTML = "♥";
+                    button.classList.add("liked");
+
+                } else {
+
+                    button.innerHTML = "♡";
+                    button.classList.remove("liked");
+
+                }
+
+            }
+
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            alert("Failed to like post");
+        });
+
+    }
+
+    /* Upload form handler */
+
+    document.getElementById("uploadForm").addEventListener("submit", function(e) {
+
+        e.preventDefault();
+
+        const formData = new FormData(this);
+
+        fetch("/upload", {
+            method: "POST",
+            body: formData
+        })
+        .then(response => {
+            if (response.ok) {
+                // Reload page to show new post
+                location.reload();
+            } else {
+                alert("Upload failed. Please try again.");
+            }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            alert("Upload failed. Please try again.");
+        });
+
+    });
+
+</script>
+
+</body>
+</html>
