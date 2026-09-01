@@ -9,11 +9,11 @@ if APP_ROOT not in sys.path:
 from flask import Flask, render_template, request, redirect, url_for, Response, jsonify
 from database import get_connection
 
-app = Flask(__name__, template_folder="../templates")
+app = Flask(__name__, template_folder="../templates", static_folder="../static")
 UPLOAD_PASSWORD = os.getenv("UPLOAD_PASSWORD", "Akash Leaks")
 
-# Maximum upload size: 100 MB
-app.config["MAX_CONTENT_LENGTH"] = 100 * 1024 * 1024
+# Maximum upload size: 250 MB (large enough for common videos)
+app.config["MAX_CONTENT_LENGTH"] = 250 * 1024 * 1024
 
 
 # Allowed file types
@@ -24,7 +24,10 @@ ALLOWED_TYPES = {
     "image/webp",
     "video/mp4",
     "video/webm",
-    "video/ogg"
+    "video/ogg",
+    "video/quicktime",
+    "video/x-matroska",
+    "video/x-msvideo"
 }
 
 
@@ -116,7 +119,10 @@ def upload():
 
     # Check MIME type
     if file.content_type not in ALLOWED_TYPES:
-        return "File type not allowed", 400
+        filename = file.filename.lower()
+        allowed_extensions = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".mp4", ".webm", ".ogg", ".mov", ".mkv", ".avi"}
+        if not filename or os.path.splitext(filename)[1] not in allowed_extensions:
+            return "File type not allowed", 400
 
     # Get and validate description/title for compatibility
     description = request.form.get("description", "").strip() or request.form.get("title", "").strip()
@@ -280,7 +286,7 @@ def file_too_large(error):
 
     return """
     <h2>File too large</h2>
-    <p>Maximum file size is 100 MB.</p>
+    <p>Maximum file size is 250 MB.</p>
     <a href="/">Go back</a>
     """, 413
 

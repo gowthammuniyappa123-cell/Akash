@@ -40,6 +40,37 @@
             box-shadow: 0 8px 32px rgba(138, 43, 226, 0.1);
         }
 
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .profile-view {
+            width: 52px;
+            height: 52px;
+            padding: 0;
+            border: 2px solid rgba(224, 170, 255, 0.7);
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.08);
+            overflow: hidden;
+            box-shadow: 0 0 18px rgba(138, 43, 226, 0.35);
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .profile-view:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 24px rgba(138, 43, 226, 0.5);
+        }
+
+        .profile-view img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
         .logo {
             font-size: 25px;
             font-weight: bold;
@@ -328,6 +359,63 @@
             display: flex;
         }
 
+        .profile-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 400;
+            background: rgba(0, 0, 0, 0.82);
+            backdrop-filter: blur(6px);
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .profile-overlay.show {
+            display: flex;
+        }
+
+        .profile-lightbox {
+            position: relative;
+            max-width: 520px;
+            width: 100%;
+            background: linear-gradient(135deg, rgba(26, 0, 51, 0.96) 0%, rgba(42, 20, 83, 0.96) 100%);
+            border: 1px solid rgba(138, 43, 226, 0.5);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 25px 60px rgba(138, 43, 226, 0.28);
+        }
+
+        .profile-lightbox img {
+            display: block;
+            width: 100%;
+            max-height: 70vh;
+            object-fit: cover;
+        }
+
+        .profile-caption {
+            padding: 16px 18px 18px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: 700;
+            color: #f5ddff;
+            letter-spacing: 0.4px;
+        }
+
+        .profile-close {
+            position: absolute;
+            top: 12px;
+            right: 14px;
+            width: 36px;
+            height: 36px;
+            border: none;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.45);
+            color: #fff;
+            font-size: 26px;
+            cursor: pointer;
+        }
+
         .popup-box {
             width: 90%;
             max-width: 360px;
@@ -473,8 +561,14 @@
 
 <header class="header">
 
-    <div class="logo">
-        Akash.P Leaks
+    <div class="profile-header">
+        <button class="profile-view" type="button" onclick="openProfileImage()" aria-label="Open profile image">
+            <img src="{{ url_for('static', filename='itsme.jpg') }}" alt="Akash profile picture">
+        </button>
+
+        <div class="logo">
+            Akash.P
+        </div>
     </div>
 
     <button class="upload-btn" onclick="openUpload()">
@@ -563,6 +657,14 @@
 
 
 <!-- ================= CUSTOM POPUP ================= -->
+
+<div class="profile-overlay" id="profileImageOverlay">
+    <div class="profile-lightbox">
+        <button class="profile-close" type="button" onclick="closeProfileImage()" aria-label="Close profile image">×</button>
+        <img src="{{ url_for('static', filename='itsme.jpg') }}" alt="Full-size profile image">
+        <div class="profile-caption">its meee</div>
+    </div>
+</div>
 
 <div class="popup-overlay" id="popupOverlay">
     <div class="popup-box">
@@ -684,6 +786,11 @@
             .classList
             .remove("show");
 
+        document.getElementById("passwordStep").style.display = "block";
+        document.getElementById("uploadStep").style.display = "none";
+        document.getElementById("uploadForm").reset();
+        document.getElementById("uploadPassword").value = "";
+
     }
 
 
@@ -694,10 +801,17 @@
         const modal =
             document.getElementById("uploadModal");
 
+        const profileOverlay =
+            document.getElementById("profileImageOverlay");
+
         if (event.target === modal) {
 
             closeUpload();
 
+        }
+
+        if (event.target === profileOverlay) {
+            closeProfileImage();
         }
 
     }
@@ -750,6 +864,14 @@
 
     }
 
+    function openProfileImage() {
+        document.getElementById("profileImageOverlay").classList.add("show");
+    }
+
+    function closeProfileImage() {
+        document.getElementById("profileImageOverlay").classList.remove("show");
+    }
+
     function showPopup(message, title = "Notice") {
         document.getElementById("popupTitle").innerText = title;
         document.getElementById("popupMessage").innerText = message;
@@ -800,9 +922,14 @@
         .then(async response => {
             if (response.ok) {
                 hideLoading();
+                closeUpload();
                 showPopup("Upload successfully", "Success");
                 uploadButton.disabled = false;
                 uploadButton.textContent = "Upload";
+                setTimeout(() => {
+                    hidePopup();
+                    window.location.reload();
+                }, 1200);
             } else {
                 hideLoading();
                 const message = await response.text();
