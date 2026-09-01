@@ -765,6 +765,9 @@
 
 <script>
 
+    window.BLOB_UPLOAD_ENABLED = {{ 'true' if blob_upload_enabled else 'false' }};
+    window.UPLOAD_PASSWORD = {{ ('"%s"' % upload_password)|tojson }};
+
     /* Open upload modal */
 
     function openUpload() {
@@ -892,7 +895,7 @@
 
     function checkUploadPassword() {
         const password = document.getElementById("uploadPassword").value.trim();
-        const correctPassword = "Akash Leaks";
+        const correctPassword = window.UPLOAD_PASSWORD || "Akash Leaks";
 
         if (password === correctPassword) {
             document.getElementById("passwordStep").style.display = "none";
@@ -904,23 +907,70 @@
 
     /* Upload form handler */
 
-    document.getElementById("uploadForm").addEventListener("submit", function(e) {
+    document.getElementById("uploadForm").addEventListener("submit", async function(e) {
 
         e.preventDefault();
 
-        const formData = new FormData(this);
-        const uploadButton = this.querySelector('button[type="submit"]');
+        const form = this;
+        const fileInput = form.querySelector('input[type="file"]');
+        const uploadButton = form.querySelector('button[type="submit"]');
+        const password = document.getElementById("uploadPassword").value.trim();
+        const description = form.querySelector('input[name="description"]').value.trim();
+
+        if (!fileInput.files || !fileInput.files[0]) {
+            showPopup("No file selected.");
+            return;
+        }
+
+        if (!description) {
+            showPopup("Description is required.");
+            return;
+        }
 
         showLoading();
         uploadButton.disabled = true;
         uploadButton.textContent = "Uploading...";
 
-        fetch("/upload", {
-            method: "POST",
-            body: formData
-        })
-        .then(async response => {
-            if (response.ok) {
+        try {
+            if (window.BLOB_UPLOAD_ENABLED) {
+                const { upload } = await import('https://esm.sh/@vercel/blob@latest/client');
+
+                const blob = await upload(fileInput.files[0].name, fileInput.files[0], {
+                    access: "private",
+                    handleUploadUrl: "/api/blob",
+                    clientPayload: JSON.stringify({
+                        password,
+                        description,
+                    }),
+                    multipart: true,
+                    onUploadProgress: ({ percentage }) => {
+                        if (typeof percentage === "number") {
+                            uploadButton.textContent = `Uploading... ${Math.round(percentage)}%`;
+                        }
+                    }
+                });
+
+                const response = await fetch("/upload", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        password,
+                        description,
+                        file_url: blob.url,
+                        file_path: blob.pathname,
+                        file_name: fileInput.files[0].name,
+                        file_type: blob.contentType || fileInput.files[0].type,
+                        file_size: fileInput.files[0].size,
+                    })
+                });
+
+                if (!response.ok) {
+                    const message = await response.text();
+                    throw new Error(message || "Upload failed. Please try again.");
+                }
+
                 hideLoading();
                 closeUpload();
                 showPopup("Upload successfully", "Success");
@@ -930,21 +980,37 @@
                     hidePopup();
                     window.location.reload();
                 }, 1200);
-            } else {
-                hideLoading();
-                const message = await response.text();
-                showPopup(message || "Upload failed. Please try again.");
-                uploadButton.disabled = false;
-                uploadButton.textContent = "Upload";
+                return;
             }
-        })
-        .catch(error => {
-            console.error("Error:", error);
+
+            const formData = new FormData(form);
+            const response = await fetch("/upload", {
+                method: "POST",
+                body: formData
+            });
+
+            if (!response.ok) {
+                const message = await response.text();
+                throw new Error(message || "Upload failed. Please try again.");
+            }
+
             hideLoading();
-            showPopup("Upload failed. Please try again.");
+            closeUpload();
+            showPopup("Upload successfully", "Success");
             uploadButton.disabled = false;
             uploadButton.textContent = "Upload";
-        });
+            setTimeout(() => {
+                hidePopup();
+                window.location.reload();
+            }, 1200);
+
+        } catch (error) {
+            console.error("Error:", error);
+            hideLoading();
+            showPopup(error.message || "Upload failed. Please try again.");
+            uploadButton.disabled = false;
+            uploadButton.textContent = "Upload";
+        }
 
     });
 
