@@ -94,8 +94,14 @@ module.exports = async function handler(req, res) {
       request,
       onBeforeGenerateToken: async (pathname, clientPayload) => {
         const payload = JSON.parse(clientPayload || "{}") || {};
+        const expectedPassword = String(process.env.UPLOAD_PASSWORD || "")
+          .trim()
+          .replace(/^['"]|['"]$/g, "");
+        const submittedPassword = String(payload.password || "")
+          .trim()
+          .replace(/^['"]|['"]$/g, "");
 
-        if (!payload.password || payload.password !== process.env.UPLOAD_PASSWORD) {
+        if (!submittedPassword || submittedPassword !== expectedPassword) {
           throw new Error("Incorrect password");
         }
 

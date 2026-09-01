@@ -900,7 +900,10 @@
         if (password === correctPassword) {
             document.getElementById("passwordStep").style.display = "none";
             document.getElementById("uploadStep").style.display = "block";
+            document.getElementById("uploadPassword").setAttribute("data-valid", "true");
         } else {
+            document.getElementById("uploadPassword").setAttribute("data-valid", "false");
+            document.getElementById("uploadPassword").focus();
             showPopup("password thappuda amathiya iru");
         }
     }
@@ -914,8 +917,17 @@
         const form = this;
         const fileInput = form.querySelector('input[type="file"]');
         const uploadButton = form.querySelector('button[type="submit"]');
-        const password = document.getElementById("uploadPassword").value.trim();
+        const passwordField = document.getElementById("uploadPassword");
+        const password = passwordField.value.trim();
         const description = form.querySelector('input[name="description"]').value.trim();
+
+        if (passwordField.getAttribute("data-valid") !== "true" || password !== (window.UPLOAD_PASSWORD || "Akash Leaks")) {
+            document.getElementById("passwordStep").style.display = "block";
+            document.getElementById("uploadStep").style.display = "none";
+            passwordField.focus();
+            showPopup("password thappuda amathiya iru");
+            return;
+        }
 
         if (!fileInput.files || !fileInput.files[0]) {
             showPopup("No file selected.");
@@ -956,7 +968,6 @@
                         "Content-Type": "application/json"
                     },
                     body: JSON.stringify({
-                        password,
                         description,
                         file_url: blob.url,
                         file_path: blob.pathname,
